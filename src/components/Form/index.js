@@ -22,6 +22,10 @@ class Form extends Component {
 	componentWillMount() {
 		this.model = {};
 		this.inputs = {};
+
+		if(this.props.managed && this.props.attachToManager) {
+			this.props.attachToManager(this);
+		}
 	}
 
 	componentDidMount() {
