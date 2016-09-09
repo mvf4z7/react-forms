@@ -6,7 +6,10 @@ class FormManager extends Component {
 		super(props);
 
 		this.attachToManager = this.attachToManager.bind(this);
+		this.detachFromManager = this.detachFromManager.bind(this);
 		this._setChildProps = this._setChildProps.bind(this);
+		this.getAllActiveForms = this.getAllActiveForms.bind(this);
+		this.allActiveFormsValid = this.allActiveFormsValid.bind(this);
 	}
 
 	componentWillMount() {
@@ -24,8 +27,37 @@ class FormManager extends Component {
 	}
 
 	attachToManager(form) {
-		console.log(form.type);
 		this.forms[form.props.name] = form
+	}
+
+	detachFromManager(form) {
+		delete this.forms[form.props.name];
+	}
+
+	getAllActiveForms(asArray) {
+		let activeForms = [];
+		if(asArray) {
+			Object.keys(this.forms).forEach(function(formName) {
+				let form = this.forms[formName];
+				if(form.isValid()) {
+					activeForms.push(form);
+				}
+			}, this);
+		} else {
+			
+		}
+		return activeForms;
+	}
+
+	allActiveFormsValid() {
+		let allFormsValid = true;
+		Object.keys(this.forms).forEach(function(formName) {
+			var form = this.forms[formName];
+			if(form.isActive() && !form.state.isValid) {
+				allFormsValid = false;
+			}
+		}, this);
+		return allFormsValid;
 	}
 
 	_setChildProps(child) {
@@ -36,6 +68,7 @@ class FormManager extends Component {
 		let additionalProps = {};
 		if(child.type === Form) {
 			additionalProps.attachToManager = this.attachToManager;
+			additionalProps.detachFromManager = this.detachFromManager;
 		}
 
 		let grandChildren = undefined;

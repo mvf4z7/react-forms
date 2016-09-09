@@ -2,137 +2,159 @@ import React, { Component } from 'react';
 import { isRequired } from '../Validations';
 
 class Form extends Component {
-	constructor(props) {
-		super(props);
+    constructor(props) {
+        super(props);
 
-		this.state = {
-			isValid: false,
-			isSubmitting: false
-		};
+        this.state = {
+            isValid: false,
+        };
 
-		this.registerInput = this.registerInput.bind(this);
-		this.attachToForm = this.attachToForm.bind(this);
-		this.detachFromForm = this.detachFromForm.bind(this);
-		this.updateModel = this.updateModel.bind(this);
-		this.validateInput = this.validateInput.bind(this);
-		this.validateForm = this.validateForm.bind(this);
-		this.isValid = this.isValid.bind(this);
-	}
+        this.registerInput = this.registerInput.bind(this);
+        this.attachToForm = this.attachToForm.bind(this);
+        this.detachFromForm = this.detachFromForm.bind(this);
+        this.updateModel = this.updateModel.bind(this);
+        this.validateInput = this.validateInput.bind(this);
+        this.validateForm = this.validateForm.bind(this);
+        this.isValid = this.isValid.bind(this);
+        this.isActive = this.isActive.bind(this);
+        this.submit = this.submit.bind(this);
+    }
 
-	componentWillMount() {
-		this.model = {};
-		this.inputs = {};
+    componentWillMount() {
+        this.model = {};
+        this.inputs = {};
 
-		if(this.props.managed && this.props.attachToManager) {
-			this.props.attachToManager(this);
-		}
-	}
+        if(this.props.managed && this.props.attachToManager) {
+            this.props.attachToManager(this);
+        }
+    }
 
-	componentDidMount() {
-		this.validateForm();
-	}
+    componentWillUnmount() {
+    	if(this.props.managed && this.props.detachFromManager) {
+    		this.props.detachFromManager(this);
+    	}
+    }
 
-	render() {
-		const childrenWithProps = React.Children.map(this.props.children, this.registerInput);
+    componentDidMount() {
+        this.validateForm();
+    }
 
-		return (
-			<form onSubmit={function(e){e.preventDefault();}}>
-				{ childrenWithProps }
-			</form>
-		);
-	}
+    render() {
+        const childrenWithProps = React.Children.map(this.props.children, this.registerInput);
+        const style = this.props.hide ? { display: 'none' } : {};
 
-	registerInput(child) {
-		// Ensures that any text inside of a tag is rendered.
-		if(!React.isValidElement(child)) {
-			return child;
-		}
+        return (
+            <form onSubmit={function(e){e.preventDefault();}} style={style}>
+                { childrenWithProps }
+            </form>
+        );
+    }
 
-		let additionalProps = {};
-		if(child.props.registeredName) {
-			additionalProps.attachToForm = this.attachToForm;
-			additionalProps.detachFromForm = this.detachFromForm;
-			additionalProps.updateModel = this.updateModel;
-			additionalProps.validateInput = this.validateInput;
-		}
+    registerInput(child) {
+        // Ensures that any text inside of a tag is rendered.
+        if(!React.isValidElement(child)) {
+            return child;
+        }
 
-		let grandChildren = undefined;
-		if(child.props.children) {
-			grandChildren = React.Children.map(child.props.children, this.registerInput);
-		}
+        let additionalProps = {};
+        if(child.props.registeredName) {
+            additionalProps.attachToForm = this.attachToForm;
+            additionalProps.detachFromForm = this.detachFromForm;
+            additionalProps.updateModel = this.updateModel;
+            additionalProps.validateInput = this.validateInput;
+        }
 
-		return React.cloneElement(child, additionalProps, grandChildren); 
-	}
+        let grandChildren = undefined;
+        if(child.props.children) {
+            grandChildren = React.Children.map(child.props.children, this.registerInput);
+        }
 
-	// Called by registered child inputs
-	attachToForm(component) {
-		this.inputs[component.props.registeredName] = component;
-		this.model[component.props.registeredName] = component.state.value;
-	}
+        return React.cloneElement(child, additionalProps, grandChildren); 
+    }
 
-	// Called by registered child inputs
-	detachFromForm(component) {
-		delete this.inputs[component.props.registeredName];
-		delete this.model[component.props.registeredName];
-	}
+    // Called by registered child inputs
+    attachToForm(component) {
+        this.inputs[component.props.registeredName] = component;
+        this.model[component.props.registeredName] = component.state.value;
+    }
 
-	// Called by registered child inputs
-	updateModel(component, value) {
-		this.model[component.props.registeredName] = value;
-	}
+    // Called by registered child inputs
+    detachFromForm(component) {
+        delete this.inputs[component.props.registeredName];
+        delete this.model[component.props.registeredName];
+    }
 
-	// Called by registered child inputs
-	validateInput(component) {
-		// If input is not required and does not have any validations listed
-		// then there is no need to validate.
-		if(!component.props.required && !component.props.validations) {
-			return;
-		}
+    // Called by registered child inputs
+    updateModel(component, value) {
+        this.model[component.props.registeredName] = value;
+    }
 
-		let isValid = true;
-		if(component.state.value || component.props.required) {
-			let validations = component.props.validations || []; 
-			if(typeof validations === 'function') {
-				validations = [ validations ];
-			}
+    // Called by registered child inputs
+    validateInput(component) {
+        // If input is not required and does not have any validations listed
+        // then there is no need to validate.
+        if(!component.props.required && !component.props.validations) {
+            return;
+        }
 
-			if(component.props.required) {
-				validations = [ isRequired, ...validations ];
-			}
+        let isValid = true;
+        if(component.state.value || component.props.required) {
+            let validations = component.props.validations || []; 
+            if(typeof validations === 'function') {
+                validations = [ validations ];
+            }
 
-			for(let i = 0; i < validations.length; i++) {
-				let validator = validations[i];
-				if(!validator(component.state.value)) {
-					isValid = false;
-					break;
-				}
-			}
-		}
+            if(component.props.required) {
+                validations = [ isRequired, ...validations ];
+            }
 
-		component.setState({
-			isValid: isValid,
-		}, this.validateForm);
-	}
+            for(let i = 0; i < validations.length; i++) {
+                let validator = validations[i];
+                if(!validator(component.state.value)) {
+                    isValid = false;
+                    break;
+                }
+            }
+        }
 
-	validateForm() {
-		let allInputsValid = true;
-		let registeredNames = Object.keys(this.inputs);
-		for(var i = 0; i < registeredNames.length; i++) {
-			let registeredName = registeredNames[i];
-			if(!this.inputs[registeredName].state.isValid) {
-				allInputsValid = false;
-				break;
-			}
-		}
+        component.setState({
+            isValid: isValid,
+        }, this.validateForm);
+    }
 
-		this.setState({
-			isValid: allInputsValid
-		});
-	}
+    validateForm() {
+        let allInputsValid = true;
+        let registeredNames = Object.keys(this.inputs);
+        for(var i = 0; i < registeredNames.length; i++) {
+            let registeredName = registeredNames[i];
+            if(!this.inputs[registeredName].state.isValid) {
+                allInputsValid = false;
+                break;
+            }
+        }
 
-	isValid() {
-		return this.state.isValid;
-	}
+        this.setState({
+            isValid: allInputsValid
+        });
+    }
+
+    isValid() {
+        return this.state.isValid;
+    }
+
+    isActive() {
+    	return this.props.active;
+    }
+
+    submit() {
+    	if(this.props.onSubmit) {
+    		return this.props.onSubmit(this.model);
+    	}
+    }
 }
+
+Form.defaultProps = {
+	active: true,
+};
 
 export default Form; 

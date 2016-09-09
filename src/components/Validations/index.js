@@ -60,12 +60,12 @@ const newMaxLength = createValidatorObj(function(maxLengthValue, value) {
 	}
 });
 
-window.newIsRequired = newIsRequired;
-window.newMaxLength = newMaxLength;
+// window.newIsRequired = newIsRequired;
+// window.newMaxLength = newMaxLength;
 
-console.log('isRequired result: ', newIsRequired.init()('abc'));
-console.log('maxLength result: ', newMaxLength.init(3)('123'));
-console.log('maxLength result: ', newMaxLength.init(2)('123'));
+// console.log('isRequired result: ', newIsRequired.init()('abc'));
+// console.log('maxLength result: ', newMaxLength.init(3)('123'));
+// console.log('maxLength result: ', newMaxLength.init(2)('123'));
 
 
 

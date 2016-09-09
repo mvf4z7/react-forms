@@ -1,0 +1,20 @@
+1. Change validators to use a wrapping function to apply
+ 	ex. apply(validatorName)  ||	apply(validatorName, arg1, arg2, ...)
+2. Move all Form related components into single directory to be use like a module
+3. Way to make forms active as well as hide/show forms for testing
+4. redux? redux-saga?
+5. present
+
+
+
+FORM MANAGER AND MANAGING FORMS
+
+Default function:
+1. Forms are always added by the FormManager onMount
+2. Forms will default to being active at all times
+3. As a result, if you can see a form it is active.
+
+Visible but inactive forms:
+1. If you want a form to be visible but inactive, set the active prop to false
+	active={false}
+2. Form will remain in the managers this.forms object, but will be marked as inactive
